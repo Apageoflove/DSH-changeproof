@@ -70,5 +70,29 @@
     "LICENSE",
     "CHANGELOG.md",
     "docs"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "changeproof",
+    "变更证明",
+    "test-coverage",
+    "changed-line-coverage",
+    "code-verification",
+    "test-impact-analysis",
+    "quality-gate",
+    "verification",
+    "agent-tools",
+    "llm-agent",
+    "typescript",
+    "nodejs",
+    "javascript",
+    "react",
+    "vitest",
+    "jest",
+    "pytest",
+    "coverage"
   ]
 }
