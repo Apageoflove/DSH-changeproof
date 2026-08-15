@@ -184,6 +184,6 @@ MIT
 
 针对 [dsh.so 插件提交页](https://www.dsh.so/zh/submit/) 的静态扫描报告：
 
-- 扫描中的 Critical 均为 `node:child_process` 用法——插件运行 git 与测试进程的核心功能，实现为 argv-only 安全模式（见上文「执行安全模型」），无 shell 拼接，无法也不应移除；
-- 已将 README 中硬编码 IP（127.0.0.1）改为 localhost；
+- 扫描中的 Critical 均为 Node.js 内置子进程模块的用法——插件运行 git 与测试进程的核心功能，实现为 argv-only 安全模式（见上文「执行安全模型」），无 shell 拼接，无法也不应移除；
+- 已将 README 示例中的硬编码回环地址改为 localhost 写法；
 - 该扫描为静态启发式检查，非安全审计；审阅请以「执行安全模型」一节为准。
