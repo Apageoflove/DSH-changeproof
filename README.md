@@ -149,20 +149,6 @@ fixtures/        测试用真实产物样本
 docs/            文档
 ```
 
-## 已知限制
-
-- 界面组件（Client）未接入，当前为模型工具形态；
-- 静态 import graph 无法解析路径别名等特殊导入，遇到时明确标注置信度降级；
-- 删除的代码行无法用覆盖率证明，仅记录风险。
-
-## 关键词
-
-DSH / dsh / dsh-plugin / deepseek-harness / Cordis / ChangeProof / 变更证明 / 变更验证
-
-测试覆盖 / 改动行覆盖 / 测试影响分析 / 代码验证 / 质量门禁 / AI 编程助手插件
-
-typescript / nodejs / javascript / react / vitest / jest / pytest / coverage / changed-line coverage / test impact analysis / code verification / quality gate
-
 ## 仓库
 
 https://github.com/Apageoflove/DSH-changeproof
