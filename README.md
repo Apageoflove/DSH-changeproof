@@ -73,7 +73,7 @@ pnpm dsh --profile web --dump-config | grep changeproof
 
 ```bash
 # 图形界面
-pnpm dsh web    # 访问 http://127.0.0.1:3080，设置中填入 API Key
+pnpm dsh web    # 访问 http://localhost:3080，设置中填入 API Key
 
 # 命令行（需 DEEPSEEK_API_KEY 环境变量）
 export DEEPSEEK_API_KEY=sk-xxxxxxxx
@@ -138,6 +138,19 @@ exclude: ["**/generated/**", "**/*.d.ts"]
 - **证据与过期**：workspace 指纹覆盖源文件/测试/lockfile/runner 配置/插件配置；证据绑定指纹，代码一变自动判 STALE
 - **执行安全**：argv-only（禁止 shell 字符串）、cwd 路径牢笼（realpath 二次校验）、环境变量白名单、超时 + 进程树终止、输出上限 + digest
 - **判定底线**：exit 0 但无覆盖产物 / 解析错误 / 低置信度映射 → 一律不给 VERIFIED
+
+### 执行安全模型
+
+插件会执行用户配置的测试命令，因此对子进程执行做了显式加固（不是依赖"信任配置"）：
+
+- **argv-only**：命令是 argv 数组，直接 `spawn` 执行，不经 shell，绝不拼接 shell 字符串；空参数、含 NUL 的参数一律拒绝
+- **配置防御**：校验配置时默认拒绝长得像 shell 命令行（含 `&&`、`||`、`; `、换行等）的 argv 条目；`CP_ALLOW_SHELLY_ARGV=1` 是显式的逃生开关，默认关闭
+- **环境变量白名单**：子进程只拿到显式传入的白名单环境，不继承宿主完整环境
+- **cwd 路径牢笼**：工作目录经 realpath 二次校验，防止软链接逃逸到预期目录之外
+- **超时 + 进程树终止**：超时或取消时 Windows 用 `taskkill /T /F`、POSIX 用负进程组 SIGKILL，回收整棵进程树，不留孤儿进程
+- **输出上限**：stdout/stderr 有字节上限，超限截断并记录 digest，防止失控输出撑爆内存
+
+代码位置：`src/host/config/schema.ts`（argv 校验）、`src/host/execution/process-tree.ts`（进程树终止）、`src/host/adapters/dsh/subprocess-port.ts`（受控执行）。
 
 ## 测试
 
