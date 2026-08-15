@@ -1,7 +1,7 @@
 /**
- * Executor: runs plan steps in dependency order with argv-only subprocesses,
- * timeouts, cancellation, output caps and artifact parsing (PROJECT.md 8.4).
- * Parse-only steps ("changed-line-coverage") never spawn a process.
+ * 执行器：按依赖顺序跑计划步骤，argv-only 子进程、超时、取消、
+ * 输出上限、产物解析（PROJECT.md 8.4）。纯解析步骤（changed-line-coverage）
+ * 不启进程。
  */
 import { randomUUID } from "node:crypto";
 import { CpError } from "../../shared/errors.ts";

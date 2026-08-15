@@ -1,8 +1,6 @@
 /**
- * Subprocess port: controlled argv execution with timeout, cancellation and
- * process-tree termination. Under real DSH this delegates to the host's
- * subprocess capability (approval/sandbox pipeline); standalone mode uses
- * node:child_process directly — still argv-only, never a shell string.
+ * 子进程端口：受控的 argv 执行（超时、取消、进程树终止）。
+ * standalone 模式直接用 node:child_process，依然是 argv-only，绝不拼 shell 字符串。
  */
 import { spawn } from "node:child_process";
 import { CpError } from "../../../shared/errors.ts";
@@ -14,7 +12,7 @@ export interface ExecuteRequest {
   cwdAbs: string;
   timeoutMs: number;
   maxOutputBytes: number;
-  env: Record<string, string>; // allow-list, never inherit full env
+  env: Record<string, string>; // 白名单，不继承完整环境
   abortSignal?: AbortSignal;
 }
 

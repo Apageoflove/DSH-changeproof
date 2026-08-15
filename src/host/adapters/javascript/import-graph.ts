@@ -1,7 +1,6 @@
 /**
- * Static import graph for JS/TS (default MEDIUM confidence; dynamic imports
- * and unresolved aliases downgrade completeness explicitly — PROJECT.md 8.2).
- * Pure analysis over injected file readers: no fs access here.
+ * JS/TS 静态 import graph（默认 MEDIUM；动态导入/未解析别名会明确降级
+ * 完整性——PROJECT.md 8.2）。纯分析，通过注入的文件读取器，不碰 fs。
  */
 export interface FileReaderPort {
   /** workspace-relative POSIX path → text content, or null when missing. */

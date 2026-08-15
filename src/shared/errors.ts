@@ -1,7 +1,6 @@
 /**
- * ChangeProof error codes and error type.
- * Shared between Host and Client; must stay JSON-serializable and must not
- * import Node-only or DSH-private modules.
+ * ChangeProof 错误码与错误类型。
+ * Host/Client 共用；必须可 JSON 序列化，不 import Node-only 或 DSH 私有模块。
  */
 
 export const ERROR_CODES = [

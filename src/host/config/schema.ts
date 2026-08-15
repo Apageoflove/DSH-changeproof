@@ -1,7 +1,6 @@
 /**
- * `.changeproof.yml` schema + strict validation (PROJECT.md 13).
- * Unknown fields, type errors, path escapes, threshold range violations and
- * ambiguous package overlaps all FAIL LOUD — no silent fallback.
+ * `.changeproof.yml` 的 schema 与严格校验（PROJECT.md 13）。
+ * 未知字段、类型错误、路径逃逸、阈值越界、package 重叠一律 fail loud，绝不静默回退。
  */
 import { CpError } from "../../shared/errors.ts";
 import type { Confidence } from "../../shared/models.ts";
@@ -120,9 +119,8 @@ function validateArgv(value: unknown, ctx: string): string[] {
   for (const a of value) {
     if (a.includes("\0")) throw new CpError("CP_CONFIG_INVALID", `${ctx}: argv entries must not contain NUL`);
     if (/[&|;`$><\n]/.test(a) && a.length > 0 && process.env["CP_ALLOW_SHELLY_ARGV"] !== "1") {
-      // Not banned outright (legit args may contain '$'), but a single argv
-      // element that looks like a shell command line is rejected: commands
-      // are argv arrays, never "npm test && curl ...".
+      // 单个 argv 元素不该是 shell 命令行（命令是 argv 数组，
+      // 不是 "npm test && curl ..."）。
       if (/&&|\|\||;\s|\n/.test(a)) {
         throw new CpError("CP_CONFIG_INVALID", `${ctx}: argv entry looks like a shell command line ("${a.slice(0, 60)}"); split into argv elements or use an explicit executable`);
       }

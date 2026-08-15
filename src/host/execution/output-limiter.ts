@@ -1,7 +1,6 @@
 /**
- * Output limiter: bounded stdout/stderr with head+tail summary and digest of
- * the FULL output (PROJECT.md 8.4). Truncation is recorded — never silently
- * dropped, never written to the session as unbounded text.
+ * 输出限制器：stdout/stderr 限量，保留头尾摘要与完整输出的 digest
+ * （PROJECT.md 8.4）。截断会记录，绝不静默丢弃或原样灌进会话。
  */
 import type { Digest } from "../../shared/models.ts";
 import { sha256Hex } from "../adapters/dsh/fs-port.ts";

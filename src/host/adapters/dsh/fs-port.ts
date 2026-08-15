@@ -1,8 +1,6 @@
 /**
- * File-system port: the single seam for workspace file access.
- * A real DSH host injects its own fs capability; in standalone (headless) mode
- * we implement the port over node:fs/promises with bounded reads and
- * workspace-jail checks.
+ * 文件系统端口：工作区文件访问的唯一入口。
+ * standalone 模式基于 node:fs/promises 实现，带读取上限和工作区路径检查。
  */
 import { createHash } from "node:crypto";
 import { realpath, stat, readFile, lstat } from "node:fs/promises";
@@ -18,15 +16,15 @@ export interface FileContent {
 export interface FsPort {
   readFileBounded(absPath: string, maxBytes: number): Promise<FileContent>;
   exists(absPath: string): Promise<boolean>;
-  /** Resolves symlinks/junctions; throws when the final path escapes root. */
+  /** 解析真实路径；symlink/junction 逃逸工作区时报错。 */
   realpathInWorkspace(rootAbs: string, relPath: string): Promise<string>;
-  /** Content digest of the file with CRLF normalized to LF (stable across platforms). */
+  /** 文件内容摘要，CRLF 归一为 LF（跨平台一致）。 */
   digestFileNormalized(absPath: string, maxBytes: number): Promise<Digest>;
   sizeOf(absPath: string): Promise<number>;
   isSymbolicLink(absPath: string): Promise<boolean>;
 }
 
-export const MAX_FILE_BYTES = 20 * 1024 * 1024; // 20 MiB hard cap per file read
+export const MAX_FILE_BYTES = 20 * 1024 * 1024; // 单文件读取上限
 
 export class StandaloneFsPort implements FsPort {
   async readFileBounded(absPath: string, maxBytes: number): Promise<FileContent> {
@@ -70,10 +68,9 @@ export class StandaloneFsPort implements FsPort {
   }
 
   /**
-   * Validate a workspace-relative path and resolve its REAL path. Rejects:
-   *   - absolute/UNC/device/`..` paths (lexical checks)
-   *   - realpaths that escape the workspace root after symlink/junction
-   *     resolution (TOCTOU-aware re-check after resolution)
+   * 校验工作区相对路径并解析真实路径。拒绝：
+   *   - 绝对路径 / UNC / 设备名 / `..`（词法检查）
+   *   - 解析 symlink/junction 后逃出工作区根（解析后再查一次，防 TOCTOU）
    */
   async realpathInWorkspace(rootAbs: string, relPath: string): Promise<string> {
     const rootReal = await realpath(rootAbs);

@@ -1,9 +1,7 @@
 /**
- * Changed-line coverage analysis (PROJECT.md 8.7).
- * Denominator = added/modified lines that the coverage adapter reliably
- * identifies as executable. Comments/blank lines never count (they are not
- * in statement/fn/branch maps). Deleted lines are excluded from the
- * denominator and reported as deletedLineRisk.
+ * 改动行覆盖分析（PROJECT.md 8.7）。
+ * 分母 = adapter 可靠识别为可执行的新增/修改行。注释、空行不计
+ * （不在 statement/fn/branch map 里）。删除行不进分母，记为删除风险。
  */
 import type { ChangedFile, ChangeSet } from "../../shared/models.ts";
 import type { FileCoverage } from "../../shared/models.ts";

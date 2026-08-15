@@ -1,8 +1,7 @@
 /**
- * Workspace fingerprint (PROJECT.md 8.6).
- * Any change to a changed source file, related test file, lockfile,
- * runner/coverage config, plugin config or adapter version invalidates
- * evidence bound to an older fingerprint.
+ * 工作区指纹（PROJECT.md 8.6）。
+ * 变更源文件、相关测试、lockfile、runner/coverage 配置、插件配置或
+ * adapter 版本只要变了，绑定旧指纹的证据就失效。
  */
 import type { Digest, FingerprintInputs } from "../../shared/models.ts";
 import { canonicalJsonStringify } from "../../shared/schema.ts";

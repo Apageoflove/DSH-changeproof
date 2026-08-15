@@ -1,7 +1,7 @@
 /**
- * Canonical tool result envelope (PROJECT.md 9.1).
- * Every tool returns { schemaVersion, kind, ok, data, diagnostics }; errors
- * are structured too — the UI never parses free text.
+ * 规范化工具结果封装（PROJECT.md 9.1）。
+ * 每个工具都返回 { schemaVersion, kind, ok, data, diagnostics }；
+ * 错误也是结构化对象——界面不解析自由文本。
  */
 import type { VerdictStatus } from "./status.ts";
 

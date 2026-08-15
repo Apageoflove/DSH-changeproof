@@ -1,23 +1,9 @@
 /**
- * ChangeProof cordis plugin entry — the REAL DeepSeek Harness binding.
- *
- * This module is loaded by the DSH bundle loader (via cordis.patch.yml
- * `- insert: [{ id: changeproof, name: dsh-changeproof }]`). It follows the
- * official plugin contract (see packages/extensions/tool-cordis):
- *
- *   export const name   — plugin id
- *   export const inject — required cordis services
- *   export function apply(ctx) — registration; cleanup via ctx.effect
- *
- * Tool registration goes through the PUBLIC ctx.tools.register() seam with
- * hand-shaped ToolDefinition objects carrying COMPILED standard JSON Schema
- * (parameters = {type:'object', properties, required}; output.schema must be
- * a plain JSON-Schema node — register() rejects author-side specs like
- * {type:'json'}). We deliberately do NOT import
- * @deepseek-ai/dsh-tools at runtime: defineTool() is a typing/wrapping helper
- * and register() only validates the compiled shape, so avoiding the peer
- * import keeps the plugin installable into any profile without transitive
- * resolution issues.
+ * DSH 插件入口（cordis）。
+ * 经 cordis.patch.yml 的 insert 行加载，按官方插件契约导出 name/inject/apply，
+ * 工具通过公开的 ctx.tools.register() 注册。
+ * 不 import @deepseek-ai/dsh-tools：defineTool 只是类型包装，register 只校验
+ * 编译后的 schema，省掉一个 peer 依赖。
  */
 import { createChangeproofHost, type ChangeproofHost } from "../../index.ts";
 import type { HostContext } from "./compatibility-facade.ts";
@@ -26,7 +12,7 @@ import { verifyTool } from "../../tools/verify.ts";
 import { statusTool } from "../../tools/status.ts";
 import { canonicalJsonStringify, canonicalize } from "../../../shared/schema.ts";
 
-/** Minimal structural typing of the public cordis Context seam we consume. */
+/** cordis Context 上我们实际用到的部分。 */
 interface DshToolDefinition {
   readonly name: string;
   readonly description: string;
@@ -45,22 +31,20 @@ interface DshToolRuntime {
 
 export interface DshPluginContext {
   readonly tools: DshToolRuntime;
-  /** Public system-prompt seam: injects guidance the model sees in every turn. */
+  /** 向模型的每轮提示注入规则文本。 */
   readonly systemPrompt: {
     section(options: { name: string; order: number; text: string }): void;
   };
-  /** Cordis effect cleanup: the returned disposer runs on plugin unload. */
+  /** 插件卸载时执行清理。 */
   effect(callback: () => void): void;
-  /** Cordis dependency resolution: waits until the named services are available. */
+  /** 等待指定服务可用后再执行。 */
   inject(services: string[], callback: (ctx: DshPluginContext) => void): Promise<void> | void;
-  /** Logger provided by the host (optional use). */
   readonly logger?: { info(msg: string): void; warn(msg: string): void };
 }
 
 export const name = "dsh-changeproof";
 export const inject = ["tools", "systemPrompt"];
 
-/** Lazily-created standalone host context (fs/subprocess ports). */
 let hostPromise: Promise<ChangeproofHost> | null = null;
 
 async function getHost(): Promise<ChangeproofHost> {
@@ -69,7 +53,7 @@ async function getHost(): Promise<ChangeproofHost> {
 }
 
 function jsonRender(_args: unknown, value: unknown): Array<{ type: "text"; text: string }> {
-  // Canonical JSON keeps model-facing output deterministic (PROJECT.md 9.1).
+  // 模型输出要求确定性的规范 JSON。
   return [{ type: "text", text: canonicalJsonStringify(value) }];
 }
 
@@ -81,16 +65,16 @@ function requireWorkspace(args: Record<string, unknown>): string {
   return ws;
 }
 
-/** Shared workspace-parameter schema (compiled JSON Schema property). */
+/** workspace 参数的 JSON Schema。 */
 const WORKSPACE_PROPERTY = {
   type: "string",
-  description: "Absolute path of the workspace (git repository) root to analyze."
+  description: "要分析的工作区（git 仓库）根目录的绝对路径。"
 } as const;
 
 const BASELINE_PROPERTY = {
   type: "string",
   enum: ["head", "merge-base"],
-  description: "Git baseline to diff against. Default: head."
+  description: "对比的 git 基线。默认 head。"
 } as const;
 
 const TOOL_DEFS: Array<{
@@ -126,7 +110,7 @@ const TOOL_DEFS: Array<{
         approvalIntent: {
           type: "string",
           enum: ["approve"],
-          description: "Explicit approval: project tests will execute with real side effects."
+          description: "明确批准：将真实执行项目测试（可能有副作用）。"
         },
         baseline: BASELINE_PROPERTY
       },
@@ -158,27 +142,11 @@ const TOOL_DEFS: Array<{
 
 export async function apply(ctx: DshPluginContext): Promise<void> {
   const disposers: Array<() => void> = [];
-  // The host's `tools` service may still be mid-mount when this bundle's
-  // fiber resolves its `inject` — the getter then lazily creates a throwaway
-  // empty registry and later reads resolve to the real one (verified by
-  // scripts/dsh-tool-visibility-probe.ts). Wait for the real service to be
-  // provided before registering so the model actually sees these tools.
+  // rc.5 的一个坑：插件 fiber 在 tools 服务挂载完之前 inject 的话，
+  // ctx.tools 会拿到一个空的临时 registry。等真实例就绪再注册。
   await ctx.inject(["tools"], () => {});
-  // Use the INJECTED tools service (after inject() it resolves to the host's
-  // real registry carrying the base tools — the one dispatch executes through).
-  // root.tools may be a different instance; prefer the injected one.
   const registry = ctx.tools as DshToolRuntime;
 
-  // Dual-path registration:
-  //  1) ctx.tools.register() — the official public seam. On rc.5 the
-  //     underlying ctx.effect(generator) is deferred inside apply() fibers,
-  //     so insertion may land late; keep it as the primary path so an
-  //     upstream fix works without plugin changes.
-  //  2) systemPrompt.tools() — the PUBLIC prompt assembly seam; guarantees
-  //     the model SEES the tools even while register() is deferred.
-  //  (insertion into the registry's layer table as an extra fallback is NOT
-  //   used: dispatch resolves through the same tables register() targets, and
-  //   a manual insert can collide with the deferred register.)
   for (const def of TOOL_DEFS) {
     disposers.push(
       registry.register({
@@ -190,14 +158,13 @@ export async function apply(ctx: DshPluginContext): Promise<void> {
         execute: async (args) => {
           const cpHost = await getHost();
           const result = await def.run(cpHost.host, (args ?? {}) as Record<string, unknown>);
-          // DSH requires lossless JSON output: drop undefined fields and
-          // normalize non-finite numbers before returning.
+          // DSH 要求输出是 lossless JSON：去掉 undefined 字段、归一非有限数。
           return canonicalize(result);
         }
       })
     );
   }
-  // boot-time diagnostic (stderr): proves apply() ran and tools landed
+  // 启动日志，用于确认插件加载成功。
   console.error(`[changeproof] apply() registered ${TOOL_DEFS.length} tools: ${TOOL_DEFS.map((d) => d.toolId).join(", ")}`);
 }
 

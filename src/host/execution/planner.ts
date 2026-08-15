@@ -1,7 +1,6 @@
 /**
- * Verification planner: cheap → targeted tests (+ coverage artifact) →
- * changed-line coverage parse (PROJECT.md 8.3). No project code executes at
- * planning time. Mutation smoke is deliberately NOT planned in MVP.
+ * 验证计划器：cheap → 定向测试（+覆盖产物）→ 改动行覆盖解析（PROJECT.md 8.3）。
+ * 计划阶段不执行任何项目代码。mutation-smoke 在 MVP 中明确不做。
  */
 import type { Digest, ImpactCandidate, VerificationPlan, VerificationStep } from "../../shared/models.ts";
 import { canonicalJsonStringify } from "../../shared/schema.ts";

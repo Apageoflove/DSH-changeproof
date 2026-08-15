@@ -1,8 +1,7 @@
 /**
- * Events port: subscription to PUBLIC DSH events only (tools/post-execute).
- * Standalone mode exposes no events; the capability report makes that
- * explicit and the Client freshness reducer then relies on canonical
- * tool results only.
+ * 事件端口：只订阅 DSH 的公共事件（tools/post-execute）。
+ * standalone 模式没有事件总线，能力报告会明确标注；Client 的新鲜度判断
+ * 只依赖规范化工具结果。
  */
 
 export interface DshToolResultEvent {

@@ -1,9 +1,7 @@
 /**
- * Unified diff parser (pure function).
- * Produces per-file changed line ranges with 1-based inclusive coordinates.
- * Added/modified ranges refer to the NEW file; deleted ranges refer to the
- * OLD file (deleted lines never enter the coverage denominator — they form
- * deletedLineRisk instead; PROJECT.md 8.1 item 4).
+ * unified diff 解析器（纯函数）。
+ * 输出每个文件的行号范围（1 起、闭区间）。新增/修改行指新文件行号；
+ * 删除行指旧文件行号（删除行不进覆盖分母，记为删除风险；PROJECT.md 8.1-4）。
  */
 import { CpError } from "../../../shared/errors.ts";
 import type { ChangedRange } from "../../../shared/models.ts";

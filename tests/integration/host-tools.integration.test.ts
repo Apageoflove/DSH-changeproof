@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import path from "node:path";
 import { createChangeproofHost } from "@host/index.js";
-import { cleanup, initRepo, makeTmpDir, writeFiles } from "../helpers/workspace.js";
+import { cleanup, initRepo, makeTmpDir, writeFiles, projectRoot } from "../helpers/workspace.js";
 
 let dir: string;
 let cp: Awaited<ReturnType<typeof createChangeproofHost>>;
@@ -93,9 +93,18 @@ describe("changeproof_plan (integration, real git)", () => {
     const nogit = await makeTmpDir("no-git");
     try {
       await writeFiles(nogit, { ".changeproof.yml": CONFIG });
-      const res = await cp.tools.invoke("changeproof_plan", { workspace: nogit });
-      expect(res.ok).toBe(false);
-      expect(res.error!.code).toBe("CP_NOT_A_GIT_REPO");
+      // 项目自身是 git 仓库，.tmp 下的临时目录能向上找到 .git；
+      // 用 GIT_CEILING_DIRECTORIES 限制向上查找，构造"非仓库"场景。
+      const prev = process.env["GIT_CEILING_DIRECTORIES"];
+      process.env["GIT_CEILING_DIRECTORIES"] = projectRoot; // git 到项目根即停，不检查它及其上层
+      try {
+        const res = await cp.tools.invoke("changeproof_plan", { workspace: nogit });
+        expect(res.ok).toBe(false);
+        expect(res.error!.code).toBe("CP_NOT_A_GIT_REPO");
+      } finally {
+        if (prev === undefined) delete process.env["GIT_CEILING_DIRECTORIES"];
+        else process.env["GIT_CEILING_DIRECTORIES"] = prev;
+      }
     } finally {
       await cleanup(nogit);
     }

@@ -1,9 +1,7 @@
 /**
- * Historical coverage map persistence (PROJECT.md 8.2 tier 2).
- * A mapping entry upgrades to HIGH only when the source digest, adapter id
- * and version still match; digest drift degrades to MEDIUM; entries older
- * than maxAgeDays are not used at all. Aggregate (non per-test) coverage is
- * NEVER back-ported into per-test attribution.
+ * 历史覆盖映射持久化（PROJECT.md 8.2 第 2 层）。
+ * 源码 digest、adapter id/version 都匹配才升 HIGH；digest 漂移降 MEDIUM；
+ * 超过 maxAgeDays 不用。聚合覆盖绝不反写为单测试归属。
  */
 import type { Digest } from "../../shared/models.ts";
 import type { FsPort } from "../adapters/dsh/fs-port.ts";

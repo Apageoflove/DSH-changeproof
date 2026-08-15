@@ -1,7 +1,7 @@
 /**
- * coverage.py JSON adapter (pytest --cov-report=json).
- * Executable lines = executed ∪ missing (minus excluded). Unknown
- * meta.format/version fails loud (PROJECT.md 8.7).
+ * coverage.py JSON 适配器（pytest --cov-report=json）。
+ * 可执行行 = executed ∪ missing（去掉 excluded）。未知 meta.format/version
+ * fail loud（PROJECT.md 8.7）。
  */
 import { CpError } from "../../../shared/errors.ts";
 import { isPlainObject } from "../../../shared/schema.ts";

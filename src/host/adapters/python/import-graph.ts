@@ -1,7 +1,7 @@
 /**
- * Static import graph for Python (from X import ... / import X).
- * Resolves dotted module names to files within the package root; dynamic
- * imports (__import__, importlib) mark the file incomplete (MEDIUM ceiling).
+ * Python 静态 import graph（from X import ... / import X）。
+ * 把点分模块名解析为 package root 下的文件；动态导入（__import__、
+ * importlib）会标记文件不完整（上限 MEDIUM）。
  */
 export interface ImportGraphResult {
   edges: Map<string, Set<string>>;

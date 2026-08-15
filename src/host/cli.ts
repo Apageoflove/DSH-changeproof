@@ -1,7 +1,6 @@
 /**
- * Headless CLI (PROJECT.md 9.4): the three tools work without any Web
- * Client. Prints canonical JSON and maps verdict statuses to exit codes
- * without hijacking the DSH process exit code.
+ * Headless CLI（PROJECT.md 9.4）：三个工具不需要 Web 客户端。
+ * 输出规范化 JSON，按结论状态映射退出码。
  *
  * Usage:
  *   node src/host/cli.ts plan    --workspace <abs>

@@ -1,6 +1,6 @@
 /**
- * Naming-convention impact candidates (LOW confidence; PROJECT.md 8.2 tier 4).
- * LOW only ever produces CANDIDATES — never a claim of exhaustiveness.
+ * 命名约定的影响候选（LOW 置信度；PROJECT.md 8.2 第 4 层）。
+ * LOW 只产出候选，绝不声称穷尽。
  */
 import type { ImpactCandidate } from "../../shared/models.ts";
 import type { PackageConfig } from "../config/schema.ts";

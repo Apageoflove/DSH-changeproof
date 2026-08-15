@@ -1,6 +1,6 @@
 /**
- * Versioned persistence: migrations gate unknown schema versions (read-only
- * refusal, never a guess; PROJECT.md 19.3).
+ * 版本化持久化：未知 schema 版本在读取侧拒绝（只读降级，绝不猜；
+ * PROJECT.md 19.3）。
  */
 import { CpError } from "../../shared/errors.ts";
 import { isPlainObject } from "../../shared/schema.ts";

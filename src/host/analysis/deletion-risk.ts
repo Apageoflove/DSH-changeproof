@@ -1,7 +1,6 @@
 /**
- * Deleted-line risk (PROJECT.md 8.7): deletions are recorded per file/symbol
- * neighborhood; they are never counted as covered. UI must show that deleted
- * risk relies on related tests / static checks / mutation smoke.
+ * 删除行风险（PROJECT.md 8.7）：删除按文件记录，绝不计为已覆盖。
+ * UI 需说明删除风险要靠相关测试 / 静态检查 / mutation 佐证。
  */
 import type { ChangedFile } from "../../shared/models.ts";
 

@@ -1,6 +1,6 @@
 /**
- * Shared analysis pipeline used by all three tools: load config → ChangeSet →
- * scan → impact → fingerprint. Pure orchestration; no project code runs here.
+ * 三个工具共用的分析流程：加载配置 → 变更集 → 扫描 → impact → 指纹。
+ * 纯编排，这里不运行任何项目代码。
  */
 import type { ChangeProofToolResult, Diagnostic } from "../../shared/result.ts";
 import type { Digest } from "../../shared/models.ts";

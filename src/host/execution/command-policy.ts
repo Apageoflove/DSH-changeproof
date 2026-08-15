@@ -1,8 +1,7 @@
 /**
- * Command policy: argv-only execution, workspace-jail cwd, env allow-list,
- * explicit preview (PROJECT.md 8.4, 14).
- * Pure checks + preview building; path realpath validation happens through
- * the FsPort right before spawn (TOCTOU re-check).
+ * 命令策略：argv-only 执行、cwd 工作区牢笼、环境白名单、显式预览
+ * （PROJECT.md 8.4, 14）。纯校验 + 预览构建；realpath 校验在 spawn
+ * 前经 FsPort 做（TOCTOU 复检）。
  */
 import { CpError } from "../../shared/errors.ts";
 
@@ -29,7 +28,9 @@ export const ENV_ALLOWLIST: ReadonlySet<string> = new Set([
   "PROCESSOR_ARCHITECTURE",
   "LANG",
   "LC_ALL",
-  "CI"
+  "CI",
+  // git 官方变量：限制仓库向上查找（嵌套仓库/测试隔离用）
+  "GIT_CEILING_DIRECTORIES"
 ]);
 
 export interface CommandCheckInput {

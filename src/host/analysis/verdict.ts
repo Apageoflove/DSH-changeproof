@@ -1,13 +1,12 @@
 /**
- * Verdict state machine (PROJECT.md 7 and 8.8).
- * Priority: STALE → FAILED → UNVERIFIED(cause) → PARTIAL → VERIFIED.
- * `NOT_APPLICABLE` only via deterministic rules with a reason code.
+ * 结论状态机（PROJECT.md 7, 8.8）。
+ * 判定顺序：STALE → FAILED → UNVERIFIED(带原因) → PARTIAL → VERIFIED。
+ * NOT_APPLICABLE 只能由带原因码的确定性规则产生。
  *
- * HARD RULES (non-negotiable):
- *  - exit 0 without coverage artifact / with parser error / low-confidence
- *    mapping NEVER yields VERIFIED;
- *  - non-Git workspaces NEVER yield VERIFIED;
- *  - evidence bound to another fingerprint is STALE even if commands passed.
+ * 硬性规则：
+ *  - exit 0 但无覆盖产物 / 解析错误 / 低置信度映射 → 绝不 VERIFIED；
+ *  - 非 Git 工作区 → 绝不 VERIFIED；
+ *  - 证据绑定旧指纹 → 一律 STALE（即使命令都通过）。
  */
 import type {
   Confidence,
@@ -28,10 +27,10 @@ export interface CheckOutcome {
 
 export interface VerdictPolicy {
   changedLinesThreshold: number; // [0,1]
-  /** When true, LOW-only impact forbids VERIFIED (exhaustive requirement). */
+  /** true 时，只有 LOW 置信度映射就不能 VERIFIED（要求穷尽）。 */
   requiresExhaustiveImpact: boolean;
   minimumImpactConfidence: Confidence;
-  /** Deletion-only changesets default to PARTIAL (open question #5). */
+  /** 仅删除的变更集默认 PARTIAL（open question #5）。 */
   deletionOnlyPolicy: "PARTIAL" | "NOT_APPLICABLE";
 }
 
@@ -39,16 +38,13 @@ export interface VerdictInputs {
   currentFingerprint: Digest;
   changeSetMode: "git" | "degraded";
   changeSetParseError: boolean;
-  /** True when the ChangeSet contains only deletions. */
+  /** 变更集是否只有删除。 */
   deletionOnly: boolean;
-  /**
-   * True when every non-deleted change is excluded by config exclude rules
-   * (e.g. only generated files changed): impact resolution is not required
-   * and the coverage check is NOT_APPLICABLE instead of LOW-blocked.
-   */
+  /** 非删除改动是否全部被 exclude 规则排除（如只改了生成文件）：
+   *  此时不要求 impact 解析，覆盖检查判 NOT_APPLICABLE 而不是被 LOW 卡住。 */
   contentChangesAllExcluded: boolean;
   impactMaxConfidence: Confidence;
-  coverage: ChangedLinesResult | null; // null = no coverage artifact parsed at all
+  coverage: ChangedLinesResult | null; // null = 没有任何覆盖产物被解析
   coverageParseError: boolean;
   checks: CheckOutcome[];
   policy: VerdictPolicy;
@@ -85,7 +81,7 @@ export function evaluateVerdict(inputs: VerdictInputs, nowIso: string): Verdict 
   const required = inputs.checks.filter((c) => c.required);
   const anyEvidence = inputs.checks.some((c) => c.evidence !== null);
 
-  // helper: per-check status
+  // 逐个检查项的状态
   for (const c of required) {
     const ev = c.evidence;
     if (!ev) {
@@ -119,7 +115,7 @@ export function evaluateVerdict(inputs: VerdictInputs, nowIso: string): Verdict 
     requiredChecks.push({ id: c.id, status: "VERIFIED", evidenceId: ev.id });
   }
 
-  // 1. freshness first
+  // 1. 新鲜度优先
   const staleEvidence = required.filter((c) => {
     const ev = c.evidence;
     return ev !== null && (ev.workspaceFingerprint !== inputs.currentFingerprint || ev.workspaceChangedDuringRun);
@@ -142,7 +138,7 @@ export function evaluateVerdict(inputs: VerdictInputs, nowIso: string): Verdict 
     return build("STALE", inputs, reasons, requiredChecks, nowIso);
   }
 
-  // 2. reliable failure
+  // 2. 可靠的失败
   const failed = required.filter((c) => {
     const ev = c.evidence;
     return (
@@ -167,14 +163,14 @@ export function evaluateVerdict(inputs: VerdictInputs, nowIso: string): Verdict 
     return build("FAILED", inputs, reasons, requiredChecks, nowIso);
   }
 
-  // spawn-error: evidence exists but execution never happened reliably
+  // spawn-error：有证据但执行根本没开始
   const spawnErrored = required.filter((c) => c.evidence?.termination === "spawn-error");
   if (spawnErrored.length > 0) {
     reasons.push(reason(VERDICT_REASONS.SPAWN_ERROR, `required check could not start: ${spawnErrored.map((c) => c.id).join(", ")}`, true));
     return build("UNVERIFIED", inputs, reasons, requiredChecks, nowIso);
   }
 
-  // 3. non-Git / parse error
+  // 3. 非 Git / 解析错误
   if (inputs.changeSetMode !== "git" || inputs.changeSetParseError) {
     reasons.push(
       reason(
@@ -188,7 +184,7 @@ export function evaluateVerdict(inputs: VerdictInputs, nowIso: string): Verdict 
     return build("UNVERIFIED", inputs, reasons, requiredChecks, nowIso);
   }
 
-  // 4. missing required evidence / parser errors
+  // 4. 缺必需证据 / 解析错误
   const missing = required.filter((c) => !c.evidence);
   const parseErrors = required.filter((c) => c.evidence?.parser.status === "error");
   if (missing.length > 0) {
@@ -212,14 +208,14 @@ export function evaluateVerdict(inputs: VerdictInputs, nowIso: string): Verdict 
     return build("UNVERIFIED", inputs, reasons, requiredChecks, nowIso);
   }
 
-  // 5. LOW-only impact with exhaustive requirement (skipped when nothing
-  //    relevant is left after exclusions — nothing to resolve tests FOR)
+  // 5. 只有 LOW 置信度映射且要求穷尽（全部改动被排除时跳过——
+  //    没有需要解析测试的对象）
   if (inputs.impactMaxConfidence === "LOW" && inputs.policy.requiresExhaustiveImpact && !inputs.contentChangesAllExcluded) {
     reasons.push(reason(VERDICT_REASONS.IMPACT_LOW_CONFIDENCE, "test impact mapping is LOW-confidence only; cannot claim exhaustive relevance", true));
     return build("UNVERIFIED", inputs, reasons, requiredChecks, nowIso);
   }
 
-  // deterministic NOT_APPLICABLE: no executable changed lines at all
+  // 确定性 NOT_APPLICABLE：没有可执行改动行
   if (inputs.coverage.coverableTotal === 0 && inputs.coverage.gapFiles.length === 0) {
     if (inputs.deletionOnly) {
       if (inputs.policy.deletionOnlyPolicy === "NOT_APPLICABLE") {
@@ -233,7 +229,7 @@ export function evaluateVerdict(inputs: VerdictInputs, nowIso: string): Verdict 
     return build("NOT_APPLICABLE", inputs, reasons, requiredChecks, nowIso);
   }
 
-  // changed files entirely absent from the artifact are coverage gaps
+  // 改动文件完全不在产物中 = 覆盖缺口
   if (inputs.coverage.gapFiles.length > 0) {
     reasons.push(
       reason(VERDICT_REASONS.COVERAGE_GAP_FILES, `changed files absent from coverage artifact (cannot set denominator to zero): ${inputs.coverage.gapFiles.join(", ")}`, true)
@@ -244,7 +240,7 @@ export function evaluateVerdict(inputs: VerdictInputs, nowIso: string): Verdict 
     return build("PARTIAL", inputs, reasons, requiredChecks, nowIso);
   }
 
-  // 6. VERIFIED gate
+  // 6. VERIFIED 门槛
   const threshold = inputs.policy.changedLinesThreshold;
   const actual = inputs.coverage.ratio ?? 0;
   const checksOk = requiredChecks.every((c) => c.status === "VERIFIED");
@@ -252,7 +248,7 @@ export function evaluateVerdict(inputs: VerdictInputs, nowIso: string): Verdict 
     return build("VERIFIED", inputs, [], requiredChecks, nowIso);
   }
 
-  // 7. PARTIAL when some trustworthy evidence exists
+  // 7. 有可信证据但没全过 → PARTIAL
   if (anyEvidence) {
     if (inputs.coverage.ratio !== null && actual < threshold) {
       reasons.push(
@@ -268,7 +264,7 @@ export function evaluateVerdict(inputs: VerdictInputs, nowIso: string): Verdict 
     return build("PARTIAL", inputs, reasons, requiredChecks, nowIso);
   }
 
-  // 8. nothing trustworthy
+  // 8. 没有任何可信证据
   reasons.push(reason(VERDICT_REASONS.NO_EVIDENCE, "no trustworthy evidence for the current fingerprint", true));
   return build("UNVERIFIED", inputs, reasons, requiredChecks, nowIso);
 }

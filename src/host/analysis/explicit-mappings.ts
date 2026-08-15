@@ -1,6 +1,6 @@
 /**
- * Explicit user mappings from `.changeproof.yml` (confidence HIGH after
- * schema + path-boundary validation; PROJECT.md 8.2 tier 1).
+ * `.changeproof.yml` 里的显式映射（经 schema + 路径边界校验后为 HIGH；
+ * PROJECT.md 8.2 第 1 层）。
  */
 import type { ImpactCandidate } from "../../shared/models.ts";
 import { globMatch } from "../../shared/schema.ts";

@@ -1,6 +1,6 @@
 /**
- * Workspace services: bounded file scan, fingerprint input gathering, git
- * runner over the subprocess port. All filesystem access goes through FsPort.
+ * 工作区服务：有界文件扫描、指纹输入收集、基于子进程端口的 git runner。
+ * 所有文件系统访问都走 FsPort。
  */
 import path from "node:path";
 import type { Digest, FingerprintInputs, ImpactCandidate } from "../shared/models.ts";

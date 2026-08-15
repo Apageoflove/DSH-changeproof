@@ -1,9 +1,8 @@
 /**
- * Impact resolver: merges the four candidate sources with fixed precedence
- * (PROJECT.md 8.2). Explicit > history-map > import-graph > naming.
- * Candidates are merged per (package, test-file-set); each keeps its sources
- * and the merged confidence is the highest trustworthy one. The verdict uses
- * maxConfidence; LOW-only impact can never claim exhaustiveness.
+ * 影响解析器：按固定优先级合并四级候选来源（PROJECT.md 8.2）。
+ * 显式 > 历史 map > import-graph > 命名。候选按 (package, 测试集) 合并，
+ * 保留各来源与理由，置信度取最高可信值。verdict 用 maxConfidence；
+ * 只有 LOW 置信度时不能声称穷尽。
  */
 import type { Confidence, ImpactCandidate } from "../../shared/models.ts";
 import { globMatch } from "../../shared/schema.ts";

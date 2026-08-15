@@ -1,6 +1,6 @@
 /**
- * Evidence store: append-only JSONL under <workspace>/.changeproof/evidence/.
- * Minimal, no secrets, digests instead of raw output (PROJECT.md 8.5).
+ * 证据存储：<workspace>/.changeproof/evidence/ 下 append-only JSONL。
+ * 最小化、不含密钥，用 digest 代替原始输出（PROJECT.md 8.5）。
  */
 import { mkdir, readFile, writeFile, readdir } from "node:fs/promises";
 import path from "node:path";

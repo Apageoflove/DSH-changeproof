@@ -1,8 +1,7 @@
 /**
- * Istanbul `coverage-final.json` adapter (Vitest/Jest with istanbul provider).
- * Executable lines come from statementMap/fnMap/branchMap locations; covered
- * lines require hit counts > 0 in s/f/b counters. Structural violations are
- * parser errors — never guessed (PROJECT.md 8.7).
+ * Istanbul `coverage-final.json` 适配器（vitest/jest 的 istanbul provider）。
+ * 可执行行来自 statementMap/fnMap/branchMap；覆盖行要求 s/f/b 计数 > 0。
+ * 结构不符就是解析错误，绝不猜（PROJECT.md 8.7）。
  */
 import { CpError } from "../../../shared/errors.ts";
 import { isPlainObject } from "../../../shared/schema.ts";

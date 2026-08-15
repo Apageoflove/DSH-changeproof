@@ -1,6 +1,6 @@
 /**
- * Verdict status model (PROJECT.md section 7).
- * Six statuses with strict definitions and a deterministic evaluation order.
+ * 结论状态模型（PROJECT.md §7）。
+ * 六种状态，定义严格，判定顺序确定。
  */
 
 export const VERDICT_STATUSES = [

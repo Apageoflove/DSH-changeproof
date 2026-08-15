@@ -1,9 +1,7 @@
 /**
- * ChangeProof Host service entry (loaded via cordis.patch.yml).
- * Wires the DSH compatibility facade, registers the three model-facing tools
- * and exposes lifecycle activation/deactivation. Under a real DSH host the
- * returned disposers are bound to Cordis effects; standalone callers use
- * them directly. Unload leaves no watchers, processes or registrations.
+ * ChangeProof Host 服务入口（经 cordis.patch.yml 加载）。
+ * 组装 DSH 兼容层、注册三个面向模型的工具，暴露启停生命周期。
+ * 卸载后不留 watcher、进程或注册。
  */
 import { createHostContext, type HostContext } from "./adapters/dsh/compatibility-facade.ts";
 import {

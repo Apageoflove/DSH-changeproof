@@ -1,7 +1,6 @@
 /**
- * Compatibility Facade (PROJECT.md 15.1, 9.2).
- * The single place where DSH bindings exist. Everything downstream consumes
- * these ports; DSH breaking changes are absorbed here.
+ * DSH 绑定层唯一入口（PROJECT.md 15.1, 9.2）。
+ * 下游只依赖这里的端口；DSH 接口变化只改这个目录。
  */
 import type { Capabilities } from "./capabilities.ts";
 import { probeRuntime } from "./capabilities.ts";
@@ -22,12 +21,6 @@ export interface HostPorts {
   events: EventsPort;
 }
 
-/**
- * Build the host context. When a real DSH plugin ctx is provided (future
- * integration), its public capabilities are adapted into our ports here;
- * otherwise standalone ports are used. All DSH-specific types live in this
- * directory and nowhere else.
- */
 export async function createHostContext(): Promise<HostContext> {
   const capabilities = await probeRuntime();
   const ports = resolvePorts(capabilities);
@@ -35,9 +28,8 @@ export async function createHostContext(): Promise<HostContext> {
 }
 
 function resolvePorts(_capabilities: Capabilities): HostPorts {
-  // Standalone ports implement the same contract a DSH host would inject.
-  // When a real ctx is available, adapters mapping ctx.fs / ctx.subprocess /
-  // ctx.events onto these interfaces are added HERE (and only here).
+  // 目前用 standalone 端口实现同一契约；将来有真实 ctx 时，
+  // 把 ctx.fs / ctx.subprocess / ctx.events 适配到这里（只改这里）。
   return {
     fs: new StandaloneFsPort(),
     subprocess: new StandaloneSubprocessPort(),

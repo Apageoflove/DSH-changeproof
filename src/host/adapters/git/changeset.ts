@@ -1,8 +1,7 @@
 /**
- * ChangeSet construction from Git (PROJECT.md 8.1).
- * All git invocations use controlled argv (never a shell string). Untracked
- * files are included only when they match a package `include` glob
- * (open question #4 resolved conservatively: include-gated + explicit hint).
+ * 从 Git 构建变更集（PROJECT.md 8.1）。
+ * 所有 git 调用都用受控 argv（绝不拼 shell 字符串）。未跟踪文件只有在
+ * 匹配 package 的 include glob 时才纳入（open question #4 保守处理）。
  */
 import { CpError } from "../../../shared/errors.ts";
 import type { ChangedFile, ChangeSet, Digest, FileStatus } from "../../../shared/models.ts";

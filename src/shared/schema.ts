@@ -1,7 +1,6 @@
 /**
- * Runtime validation primitives + canonical JSON helpers.
- * Hand-rolled, dependency-free guards used by both the config loader and the
- * tool input validation. Shared code must not import Node-only modules.
+ * 运行时校验原语 + 规范化 JSON 工具。
+ * 手写、零依赖，配置加载和工具入参校验共用。共享代码不 import Node-only 模块。
  */
 
 export function canonicalize(value: unknown): unknown {

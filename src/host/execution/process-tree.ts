@@ -1,8 +1,7 @@
 /**
- * Process-tree termination (PROJECT.md 8.4).
- * Windows: `taskkill /T /F`; POSIX: negative-pgid SIGKILL after spawning
- * detached. Always waits for the child to be reaped so callers can trust
- * "no orphans" after cancellation/timeout.
+ * 进程树终止（PROJECT.md 8.4）。
+ * Windows 用 `taskkill /T /F`；POSIX 用 detached + 负 pgid SIGKILL。
+ * 总是等子进程被回收，取消/超时后保证无孤儿。
  */
 import type { ChildProcess } from "node:child_process";
 
