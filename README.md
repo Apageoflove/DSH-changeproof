@@ -1,4 +1,4 @@
-# dsh-changeproof（ChangeProof）
+# DSH-changeproof（变更证明 ChangeProof）
 
 一个装进 DeepSeek Harness（DSH）的小插件，负责一件事：**代码改完之后，确认改动的那些行真的被测试跑到过。**
 
@@ -184,7 +184,7 @@ docs/            文档
 
 ## 仓库
 
-https://github.com/Apageoflove/dsh-changeproof
+https://github.com/Apageoflove/DSH-changeproof
 
 ## License
 
