@@ -129,6 +129,16 @@ exclude: ["**/generated/**", "**/*.d.ts"]
 
 字段说明见 [docs/configuration.md](docs/configuration.md)。
 
+## 技术要点
+
+- **技术栈**：TypeScript / Node.js（≥20.11）/ ESM；测试用 vitest + fast-check；覆盖率适配 Istanbul（vitest/jest）与 coverage.py（pytest）
+- **架构**：Host（分析、执行、证据存储）与 DSH 绑定层分离——绑定层在 `src/host/adapters/dsh/` 单目录，其余代码零 DSH 依赖；同时提供独立 CLI，不装 DSH 也能用
+- **影响解析**：四级来源（配置显式映射 → 历史覆盖记录 → 静态 import graph → 命名约定），按 (包, 测试集) 合并，置信度取最高可信值
+- **覆盖率口径**：分母 = 本次改动行中 adapter 可靠识别为可执行的行；删除行不计入分母，单独记为风险
+- **证据与过期**：workspace 指纹覆盖源文件/测试/lockfile/runner 配置/插件配置；证据绑定指纹，代码一变自动判 STALE
+- **执行安全**：argv-only（禁止 shell 字符串）、cwd 路径牢笼（realpath 二次校验）、环境变量白名单、超时 + 进程树终止、输出上限 + digest
+- **判定底线**：exit 0 但无覆盖产物 / 解析错误 / 低置信度映射 → 一律不给 VERIFIED
+
 ## 测试
 
 ```bash

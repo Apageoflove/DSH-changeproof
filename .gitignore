@@ -4,3 +4,6 @@ dist
 coverage
 .npm-cache
 *.tsbuildinfo
+
+# 制作规格记录（PROJECT.md），不上传
+PROJECT.md
