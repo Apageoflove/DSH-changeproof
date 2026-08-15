@@ -76,13 +76,17 @@ for (const f of files) {
 // 2) tree
 const tree = await gh("POST", `${API}/git/trees`, JSON.stringify({ tree: blobs }));
 
-// 3) commit
+// 3) commit — use the LOCAL git commit's real message/author so the GitHub
+//    history shows what we actually wrote (not a hardcoded string).
+const { stdout: msgOut } = await ex("git", ["log", "-1", "--format=%B"], { cwd: process.cwd() });
+const { stdout: authorOut } = await ex("git", ["log", "-1", "--format=%an|%ae"], { cwd: process.cwd() });
+const [authorName, authorEmail] = authorOut.trim().split("|");
 const commit = await gh("POST", `${API}/git/commits`, JSON.stringify({
-  message: "ChangeProof: change-relevance + evidence-freshness plugin for DeepSeek Harness\n\n- changeproof_plan / changeproof_verify / changeproof_status\n- 6-state verdict machine\n- 4-tier impact resolution\n- Changed-line coverage (Istanbul + coverage.py)\n- Fingerprint freshness (stale detection)\n- Real DSH integration (deepseek-harness 47f9438)\n- 163 tests / 31 benchmark cases / 0 silent false-greens",
+  message: msgOut.trimEnd(),
   tree: tree.sha,
   parents: [parentSha],
-  author: { name: "Apageoflove", email: "apageoflove@users.noreply.github.com" },
-  committer: { name: "Apageoflove", email: "apageoflove@users.noreply.github.com" }
+  author: { name: authorName || "Apageoflove", email: authorEmail || "apageoflove@users.noreply.github.com" },
+  committer: { name: authorName || "Apageoflove", email: authorEmail || "apageoflove@users.noreply.github.com" }
 }));
 
 // 4) ref
