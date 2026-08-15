@@ -1,0 +1,11 @@
+# ChangeProof (`dsh-changeproof`) bundle patch for DeepSeek Harness.
+# Format: TOP-LEVEL ARRAY of cordis loader patch entries (required by
+# packages/boot/app-boot/src/index.ts parsePatchList). Loaded via
+# package.json#dsh.bundle.patch when installed into a profile.
+#
+# A single plugin insert; all tool registration happens inside the plugin's
+# apply(ctx) through the public ctx.tools seam, and all cleanup is bound to a
+# cordis effect (unload removes the tools, no residue).
+- insert:
+    - id: changeproof
+      name: dsh-changeproof
