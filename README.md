@@ -1,56 +1,139 @@
 # dsh-changeproof（ChangeProof）
 
-> DeepSeek Harness（DSH）插件：**变更相关性 + 证据新鲜度**的质量护栏。
-> "这个改动需要跑哪些测试？" —— 且 **exit 0 不再等于 PASS**。
+一个装进 DeepSeek Harness（DSH）的小插件，负责一件事：**代码改完之后，确认改动的那些行真的被测试跑到过。**
 
-## 为什么
+## 它解决什么问题
 
-传统 Agent 交付流程的两个系统性盲区：
+"跑测试，测试过了就算改对"——这个流程有个大漏洞：
 
-1. **"跑全量太慢 → 只跑一部分"** 是猜的：没有受影响测试集合与量化证据。
-2. **"测试通过了" ≠ "本次改动被验证"**：跑的是无关测试、产物缺失、或代码在验证后又变了，都能伪装成绿色。
+- 你改了 A 文件，跑的是 B 文件的测试，全绿，但你改的东西压根没被测到；
+- 测试跑了，但只执行到你改的 10 行里的 3 行，剩下 7 行没测到，照样报"通过"；
+- 验证完之后代码又被改了，之前那句"验证通过"还挂在那，像没过期一样。
 
-ChangeProof 用四级 impact 解析（显式映射 → 历史 coverage map → 静态 import graph → 命名约定）产出分层最小计划，执行后解析**改动行级**覆盖率，把一切结论绑定到 workspace fingerprint 上的证据记录。
+ChangeProof 把这三件事堵上：
 
-## 六态结论（固定优先级）
+1. **算出哪些测试跟你的改动有关**（顺着代码引用关系找，不是全量瞎跑，也不是拍脑袋猜）；
+2. **跑完测试后对行号**：你改的每一行，有没有真的被执行到。改了 10 行只测到 3 行 → 不给通过，明确告诉你哪 7 行没测到；
+3. **结论有保质期**：证据绑定当时的代码状态（指纹），代码一变，旧结论自动作废。
 
-`STALE → FAILED → UNVERIFIED(归因) → PARTIAL → VERIFIED`；`NOT_APPLICABLE` 仅由带原因码的确定性规则产生。
+换句话说：**"测试通过了"不等于"改动被验证了"。** 这个插件就是把这个区别给你抓出来。
 
-硬性红线（测试钉死）：
-- exit 0 但缺 coverage 产物 / 解析错误 / LOW 置信度映射 → **绝不 VERIFIED**
-- 非 Git 工作区 → **绝不 VERIFIED**
-- 运行期间工作区变化 / 证据绑定旧 fingerprint → **一律 STALE**，即使全绿
-- 删除行永不计入覆盖率分母（单独的删除风险记录）
+## 装完之后是什么体验
 
-## 快速开始
+装好后 DSH 里会多三个工具，模型在对话中会自动调用：
 
-### 作为 DSH 插件（已与真实 DSH 集成验证）
+| 工具 | 干什么 | 什么时候被调用 |
+|---|---|---|
+| `changeproof_plan` | 出检查清单：这次改动涉及哪些测试，怎么验 | 问"这个改动影响哪些测试"时 |
+| `changeproof_verify` | 真跑测试，对行号，给结论 | 改完代码后（有自动触发规则，不用你记） |
+| `changeproof_status` | 查旧结论还作不作数 | 问"上次验证还有效吗"时 |
 
-**已实测**：deepseek-harness `47f9438`（0.1.0-rc.5）+ 本插件在 web/headless 两个 profile 下真实加载，headless 端到端（真实模型调用）：plan → PLAN_OK、verify（真实 vitest 子进程）→ **VERIFIED**、status → fresh → 篡改后 **stale**；web 正常起服；卸载零残留。详见 docs/compatibility.md。
+插件还带一条**工作流规则**：模型每次修改或新增代码后，默认自己调 `changeproof_verify` 验证，不用你每次提醒。
 
-```sh
-# 在 DSH 源码根目录（先 pnpm install && pnpm run build）
-pnpm dsh plugin --profile web      add E:/agent/dsh-changeproof   # 或 headless
-pnpm dsh --profile web --dump-config        # 应出现 "# == dsh-changeproof" 层
-pnpm dsh web                                # http://127.0.0.1:3080
+结论一共六种：`VERIFIED`（通过）、`PARTIAL`（部分，有行没测到）、`FAILED`（测试挂了）、`STALE`（代码变了，旧结论作废）、`UNVERIFIED`（没有可信证据，不评）、`NOT_APPLICABLE`（这次改动不涉及可测代码）。
+
+其中有一条底线：**测试过了但没有覆盖证据，或者证据对不上当前代码，一律不给 VERIFIED。** 不会出现"假装通过"。
+
+## 部署到 DSH（完整步骤）
+
+以下在 Windows 实测通过（macOS/Linux 命令相同，路径换成你自己的）。
+
+### 前提
+
+- Node.js 24 或更高（DSH 要求 `^22.19 || >=24`）
+- pnpm 11.7（`npm install -g pnpm@11.7.0`，或用 corepack）
+- Git
+
+### 第一步：拿到 DSH 源码
+
+```bash
+# GitHub 直连不通的话用 Gitee 镜像（内容一样）
+git clone --depth 1 https://gitee.com/mirrors/deepseek-harness.git DSH
+cd DSH
+```
+
+### 第二步：装依赖、构建 DSH
+
+```bash
+pnpm install
+pnpm run build:lib      # 构建核心库
+pnpm run build:web      # 构建 web 前端（只用 headless 可跳过）
+```
+
+### 第三步：构建插件
+
+```bash
+cd E:\agent\dsh-changeproof   # 换成你的插件目录
+npm install
+npm run build                 # 产物在 dist/，含 DSH 插件入口
+```
+
+### 第四步：装进 DSH
+
+```bash
+cd <DSH 目录>
+pnpm dsh plugin --profile web add E:\agent\dsh-changeproof
+```
+
+- 想同时在命令行用（headless），再加一个 profile：
+  ```bash
+  pnpm dsh plugin --profile headless add E:\agent\dsh-changeproof
+  ```
+- `web` 是图形界面 profile，`headless` 是纯命令行 profile，两者独立，装哪个看你要用哪个。
+
+### 第五步：确认装上了
+
+```bash
+pnpm dsh --profile web --dump-config | grep changeproof
+```
+
+能看到 `# == dsh-changeproof` 这一层，就说明装上了。
+
+### 第六步：用起来
+
+```bash
+# 图形界面
+pnpm dsh web          # 打开 http://127.0.0.1:3080，在设置里填 API Key
+
+# 或命令行（需要 DEEPSEEK_API_KEY 环境变量）
+export DEEPSEEK_API_KEY=sk-xxxxxxxx
+pnpm dsh --profile headless "把 src/calc.ts 的折扣从 8 折改成 75 折"
+```
+
+对话里说"帮我改个 xx 并验证"，模型改完会自动调 `changeproof_verify` 给你结论。
+
+### 卸载
+
+```bash
 pnpm dsh plugin --profile web remove dsh-changeproof
 ```
 
-接入适配全部收敛在 `src/host/adapters/dsh/`（插件形态 / patch 顶层数组格式 / inject 等待 / lossless JSON 输出）。Web UI 槽位（Client）为后续版本范围。
+卸载后插件、依赖、配置层全部清干净，不留残留。
 
-### Headless（无 DSH 也完整可用）
+### 分发给别人
+
+- 对方把插件目录拷过去，按第四步 `add` 本地路径即可；
+- 或者等发布到 npm 后，`pnpm dsh plugin add dsh-changeproof` 一条命令装（目前未发布）。
+
+## 不装 DSH 也能用（命令行单独跑）
+
+插件核心不依赖 DSH，单独用命令行也行：
 
 ```bash
+cd <插件目录>
 npm install && npm run build
 
-node dist/host/cli.mjs plan   --workspace /abs/path/to/repo   # 只分析，不执行
-node dist/host/cli.mjs verify --workspace /abs/path/to/repo --yes
-node dist/host/cli.mjs status --workspace /abs/path/to/repo
+# 在你自己的项目里验证（项目根需要有 .changeproof.yml，见下）
+node dist/host/cli.mjs plan   --workspace E:\my-project   # 只看计划，不执行
+node dist/host/cli.mjs verify --workspace E:\my-project --yes   # 真跑测试
+node dist/host/cli.mjs status --workspace E:\my-project   # 结论是否过期
 ```
 
-`verify` 不带 `--yes` 只打印**将执行的完整命令预览**（argv/cwd/timeout/期望产物 + 真实副作用警告）并以 65 退出。退出码：VERIFIED/NOT_APPLICABLE=0，FAILED=1，STALE=2，PARTIAL=3，UNVERIFIED=4。
+`verify` 不加 `--yes` 只会打印将要执行的命令清单，确认后加 `--yes` 才真跑。
 
-### 最小配置（被验证仓库根的 `.changeproof.yml`）
+## 被验证的项目要配什么
+
+在你要验证的项目根目录放一个 `.changeproof.yml`，告诉插件：你的代码在哪、测试用什么命令跑、覆盖率产物输出到哪：
 
 ```yaml
 schemaVersion: 1
@@ -58,49 +141,50 @@ packages:
   - id: web
     root: packages/web
     languages: [typescript]
-    include: [packages/web/src/**/*.ts]
+    include: [packages/web/src/**/*.ts]       # 源码范围
     test:
-      adapter: vitest-istanbul
-      argv: [pnpm, vitest, run, --coverage]
+      adapter: vitest-istanbul                # vitest / jest / pytest 都支持
+      argv: [pnpm, vitest, run, --coverage]   # 你项目自己的测试命令
       cwd: packages/web
       timeoutMs: 120000
       coverageFile: packages/web/coverage/coverage-final.json
 thresholds: { changedLines: 1.0, minimumImpactConfidence: MEDIUM }
-exclude: ["**/generated/**", "**/*.d.ts"]
+exclude: ["**/generated/**", "**/*.d.ts"]     # 排除不用验证的目录
 ```
 
-## 测试（本仓库自身）
+完整字段说明见 [docs/configuration.md](docs/configuration.md)。
+
+## 测试
+
+本仓库自带 163 项测试（单元、集成、端到端、安全等）和 31 个基准用例，全部可离线跑：
 
 ```bash
-npm test              # 163 项：单元 / 属性 / 契约 / 集成 / E2E / 视觉 / 无障碍 / 安全
-npm run benchmark     # 31 个基准 case（真实 git 工作区 + 真实子进程）
-npm run verify-package  # typecheck + 全量测试 + 构建 + tarball 审计
-npm run seam-probe      # DSH capability 探测报告
+npm test            # 全量测试
+npm run benchmark   # 31 个基准场景：12 个"测试全绿但实际没验到"的假绿 case 全部被识破
+npm run verify-package   # 类型检查 + 测试 + 构建 + 打包内容审计
 ```
 
-实测（Windows / Node 24 / vitest 3 / pytest 8 + coverage 7.15.4）：
-
-- **测试 163/163 通过**（含真实 vitest 全链路、真实 pytest+coverage.py 全链路、headless CLI E2E）
-- **基准 31/31 通过**：12 个"exit 0 假绿"case 全部被识破，**0 静默失败**，中位单 case 墙钟 ~0.6s
-- 全部数字为实测输出，见 `.tmp/benchmark-report.json`
-
-## 仓库布局
+## 目录结构
 
 ```
-src/shared/    跨端内核：models / 状态机语义 / 错误码 / 规范 JSON（零 Node/DSH 依赖）
-src/host/      tools(plan/verify/status) · analysis(impact/coverage/fingerprint/verdict)
-               · execution(planner/executor/命令策略/进程树/输出上限) · persistence · adapters(git/istanbul/coverage.py/…)
-src/host/adapters/dsh/   唯一 DSH 绑定层（capability 探测 + 端口；无 DSH 时 standalone 回退）
-src/client/    投影(reducer 只折叠不推断) + Proofboard 组件 + CSS Modules
-tests/         unit / property / contract / integration / e2e / visual / accessibility / security
-fixtures/      真实产物契约 + fake-runner（确定性离线基准）
-docs/          architecture / configuration / compatibility / security / adapters / troubleshooting
+src/shared/      核心数据模型和状态机（不依赖 DSH，可单独复用）
+src/host/        三个工具、分析引擎、执行器、证据存储
+src/host/adapters/dsh/   DSH 绑定层（装进 DSH 的入口都在这里）
+src/client/      界面组件（预留，当前版本未启用）
+tests/           测试
+fixtures/        测试用的真实产物样本
+docs/            文档
 ```
 
-## 文档
+## 已知限制
 
-- [架构](docs/architecture.md) · [配置](docs/configuration.md) · [适配器](docs/adapters.md)
-- [兼容性与已知限制](docs/compatibility.md) · [安全](docs/security.md) · [故障排查](docs/troubleshooting.md)
+- Web 界面里的插件面板（UI 组件）还没接，当前版本只有模型工具形态；
+- 静态 import graph 识别不了路径别名之类的特殊导入（遇到会明确标注"置信度降级"，不会假装精确）；
+- 删除的代码行无法用覆盖率证明，插件只记录风险，需要你自己补静态检查或 mutation 验证。
+
+## 仓库
+
+https://github.com/Apageoflove/dsh-changeproof
 
 ## License
 
