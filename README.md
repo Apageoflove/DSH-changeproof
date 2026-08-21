@@ -33,8 +33,8 @@ DeepSeek Harness（DSH）插件：代码改动后，确认改动的行真的被�
 ### 1. 获取 DSH 源码
 
 ```bash
-git clone --depth 1 https://gitee.com/mirrors/deepseek-harness.git DSH
-# GitHub 直连：git clone --depth 1 https://github.com/deepseek-ai/deepseek-harness.git DSH
+git clone --depth 1 https://github.com/deepseek-ai/deepseek-harness.git DSH
+# 国内网络慢可以用 gitee 镜像：git clone --depth 1 https://gitee.com/mirrors/deepseek-harness.git DSH
 cd DSH
 ```
 
