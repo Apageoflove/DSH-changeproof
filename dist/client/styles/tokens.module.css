@@ -1,0 +1,38 @@
+/* ChangeProof design tokens — neutral engineering console (PROJECT.md 12.1).
+   Uses CSS custom properties so light/dark only swap the token block.
+   Status is ALWAYS text + icon + reason code, never color alone. */
+
+:root,
+:where([data-cp-theme="light"]) {
+  --cp-bg: #ffffff;
+  --cp-bg-muted: #f6f7f8;
+  --cp-border: #d5d9dd;
+  --cp-text: #1c2430;
+  --cp-text-muted: #57606a;
+  --cp-ok: #1a7f37;
+  --cp-ok-bg: #eaf5ec;
+  --cp-warn: #9a6700;
+  --cp-warn-bg: #fdf3d7;
+  --cp-error: #cf222e;
+  --cp-error-bg: #fdebec;
+  --cp-info: #0969da;
+  --cp-info-bg: #eaf1fb;
+  --cp-focus: #0969da;
+}
+
+:where([data-cp-theme="dark"]) {
+  --cp-bg: #14181d;
+  --cp-bg-muted: #1c2127;
+  --cp-border: #36404a;
+  --cp-text: #e4e9ee;
+  --cp-text-muted: #98a2ad;
+  --cp-ok: #4ec970;
+  --cp-ok-bg: #12261a;
+  --cp-warn: #d7a64a;
+  --cp-warn-bg: #2a2312;
+  --cp-error: #f0868e;
+  --cp-error-bg: #2e1417;
+  --cp-info: #6cb2f5;
+  --cp-info-bg: #12202e;
+  --cp-focus: #6cb2f5;
+}

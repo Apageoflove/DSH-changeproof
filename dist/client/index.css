@@ -1,0 +1,132 @@
+/* src/client/styles/proofboard.module.css */
+.proofboard_board {
+  background: var(--cp-bg);
+  border: 1px solid var(--cp-border);
+  color: var(--cp-text);
+  font:
+    13px/1.5 system-ui,
+    "Segoe UI",
+    sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+@media (min-width: 960px) {
+  .proofboard_boardWide {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
+.proofboard_section {
+  border: 1px solid var(--cp-border);
+  border-radius: 6px;
+  background: var(--cp-bg);
+  padding: 8px 10px;
+  min-width: 0;
+}
+.proofboard_sectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cp-text-muted);
+  margin: 0 0 6px 0;
+}
+.proofboard_chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--cp-border);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-weight: 600;
+  background: var(--cp-bg-muted);
+  white-space: nowrap;
+}
+.proofboard_chipIcon {
+  font-style: normal;
+}
+.proofboard_severityOk {
+  color: var(--cp-ok);
+  background: var(--cp-ok-bg);
+  border-color: color-mix(in srgb, var(--cp-ok) 40%, transparent);
+}
+.proofboard_severityWarn {
+  color: var(--cp-warn);
+  background: var(--cp-warn-bg);
+  border-color: color-mix(in srgb, var(--cp-warn) 40%, transparent);
+}
+.proofboard_severityError {
+  color: var(--cp-error);
+  background: var(--cp-error-bg);
+  border-color: color-mix(in srgb, var(--cp-error) 40%, transparent);
+}
+.proofboard_severityInfo {
+  color: var(--cp-info);
+  background: var(--cp-info-bg);
+  border-color: color-mix(in srgb, var(--cp-info) 40%, transparent);
+}
+.proofboard_severityMuted {
+  color: var(--cp-text-muted);
+}
+.proofboard_table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.proofboard_table th,
+.proofboard_table td {
+  text-align: left;
+  padding: 3px 8px 3px 0;
+  border-bottom: 1px solid var(--cp-border);
+  vertical-align: top;
+}
+.proofboard_table th {
+  color: var(--cp-text-muted);
+  font-weight: 600;
+}
+.proofboard_mono {
+  font-family:
+    ui-monospace,
+    Consolas,
+    monospace;
+  font-size: 12px;
+}
+.proofboard_blocker {
+  margin: 2px 0;
+}
+.proofboard_dock {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+.proofboard_button {
+  border: 1px solid var(--cp-border);
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+.proofboard_button:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 1px;
+}
+.proofboard_buttonPrimary {
+  background: var(--cp-info-bg);
+  border-color: var(--cp-info);
+  color: var(--cp-info);
+}
+.proofboard_empty {
+  color: var(--cp-text-muted);
+}
+.proofboard_announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+/*# sourceMappingURL=index.css.map */
